@@ -45,6 +45,7 @@ st.markdown('<h1 class="grass-title">⛳️ Mikey\'s Golf Optimizer</h1>', unsaf
 # --- Upload FanDuel and SG Putting CSVs ---
 fanduel_file = st.file_uploader("📤 Upload FanDuel CSV", type="csv")
 putting_file = st.file_uploader("📤 Upload Strokes Gained Putting CSV", type="csv")
+putting_file = st.file_uploader("📤 Upload Strokes Gained Putting CSV", type="csv")
 
 if fanduel_file and putting_file:
     try:
