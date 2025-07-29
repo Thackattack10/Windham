@@ -29,7 +29,6 @@ st.markdown(
     .block-container {
         padding-top: 2rem;
     }
-
     </style>
     """,
     unsafe_allow_html=True
@@ -49,7 +48,33 @@ if salary_file:
         st.stop()
 
     required_columns = ['Nickname', 'Salary']
-if not all(col in df.columns for col in required_columns):
-    st.error(f"CSV must contain columns: {', '.join(required_columns)}")
-    st.stop()
+    if not all(col in df.columns for col in required_columns):
+        st.error(f"CSV must contain columns: {', '.join(required_columns)}")
+        st.stop()
 
+    # 📊 Placeholder stats (replace with real later or scraped from source)
+    df['DrivingAccuracy'] = 65.0
+    df['GreensInRegulation'] = 66.0
+    df['PuttingAverage'] = 1.75
+    df['RecentForm'] = 75.0
+
+    # 📈 Calculate projections
+    df['Projection'] = df.apply(project_golf_points, axis=1)
+    df['Projection'].fillna(0, inplace=True)
+
+    st.subheader("📊 Player Projections")
+    st.dataframe(df.sort_values("Projection", ascending=False))
+
+    # 🧮 Optimize lineup
+    st.subheader("✅ Optimized Lineup")
+    lineup = optimize_lineup(df)
+    st.dataframe(lineup[['Nickname', 'Salary', 'Projection']])
+
+    # 💵 Totals
+    total_salary = lineup['Salary'].sum()
+    total_proj = lineup['Projection'].sum()
+    st.markdown(f"**💰 Total Salary:** `${total_salary}`")
+    st.markdown(f"**🔥 Total Projected Points:** `{total_proj:.2f}`")
+
+else:
+    st.info("Please upload your FanDuel golf CSV file to get started.")
