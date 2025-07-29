@@ -1,0 +1,6 @@
+streamlit
+pandas
+pulp
+requests
+fuzzywuzzy
+python-Levenshtein
