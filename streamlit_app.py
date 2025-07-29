@@ -42,15 +42,27 @@ st.markdown(
 # --- Title ---
 st.markdown('<h1 class="grass-title">⛳️ Mikey\'s Golf Optimizer</h1>', unsafe_allow_html=True)
 
-# --- Upload CSV ---
-salary_file = st.file_uploader("Upload FanDuel Golf CSV", type="csv")
+# --- Upload FanDuel and SG Putting CSVs ---
+fanduel_file = st.file_uploader("📤 Upload FanDuel CSV", type="csv")
+putting_file = st.file_uploader("📤 Upload Strokes Gained Putting CSV", type="csv")
 
-if salary_file:
+if fanduel_file and putting_file:
     try:
-        df = pd.read_csv(salary_file)
+        df_fd = pd.read_csv(fanduel_file)
+        df_putting = pd.read_csv(putting_file)
     except Exception as e:
-        st.error(f"Error loading CSV file: {e}")
+        st.error(f"Error reading CSV files: {e}")
         st.stop()
+
+    # Clean and merge data
+    df_fd['PLAYER'] = df_fd['Nickname'].str.strip().str.lower()
+    df_putting['PLAYER'] = df_putting['PLAYER'].str.strip().str.lower()
+
+    df = pd.merge(df_fd, df_putting[['PLAYER', 'AVG']], on='PLAYER', how='left')
+    df.rename(columns={'AVG': 'SG_Putting'}, inplace=True)
+
+    # Fill missing putting with 0
+    df['SG_Putting'] = df['SG_Putting'].fillna(0)
 
     # Validate required columns
     required_columns = ['Nickname', 'Salary', 'FPPG', 'SG_Putting']
@@ -59,24 +71,22 @@ if salary_file:
         st.error(f"Missing required columns: {missing_cols}")
         st.stop()
 
-    # Apply projection function
+    # Projection
     df['ProjectedPoints'] = df.apply(project_golf_points, axis=1)
 
     # Show player pool
     st.subheader("📋 Player Pool")
     st.dataframe(df[['Nickname', 'Salary', 'FPPG', 'SG_Putting', 'ProjectedPoints']].sort_values(by='ProjectedPoints', ascending=False))
 
-    # Lock players
+    # Lock / exclude players
     locked_players = st.multiselect("🔒 Lock In Specific Players", options=df['Nickname'].tolist())
-
-    # Exclude players
     excluded_players = st.multiselect("🚫 Exclude These Players", options=df['Nickname'].tolist())
 
-    # Filter out excluded players
+    # Filter
     filtered_df = df[~df['Nickname'].isin(excluded_players)].copy()
     filtered_df['Locked'] = filtered_df['Nickname'].isin(locked_players)
 
-    # Optimize lineup button
+    # Run optimizer
     st.subheader("🎯 Optimize Your Lineup")
     if st.button("Run Optimizer"):
         try:
