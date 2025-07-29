@@ -10,22 +10,13 @@ st.markdown(
     @import url('https://fonts.googleapis.com/css2?family=Luckiest+Guy&display=swap');
 
     .stApp {
-        position: relative;
-        background-image: url("https://www.comingsoon.net/wp-content/uploads/sites/3/2025/07/Happy-Gilmore-2-Death.jpg?resize=101");
+        background-image: linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)),
+                          url("https://www.comingsoon.net/wp-content/uploads/sites/3/2025/07/Happy-Gilmore-2-Death.jpg?resize=101");
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
         background-attachment: fixed;
         color: #39ff14;
-        z-index: 0;
-    }
-
-    .stApp::before {
-        content: "";
-        position: fixed;
-        top: 0; left: 0; right: 0; bottom: 0;
-        background: rgba(0, 0, 0, 0.5);  /* black overlay with 50% opacity */
-        z-index: -1;
     }
 
     .grass-title {
@@ -38,14 +29,10 @@ st.markdown(
             2px 2px 1px #32CD32,
             3px 3px 2px #7CFC00;
         margin-bottom: 2rem;
-        position: relative;
-        z-index: 1;
     }
 
     .block-container {
         padding-top: 2rem;
-        position: relative;
-        z-index: 1;
     }
     </style>
     """,
@@ -100,5 +87,3 @@ if salary_file:
             st.write(f"📈 Projected Points: {lineup['ProjectedPoints'].sum():.2f}")
         except ValueError as ve:
             st.error(str(ve))
-
-# Note: Removed the else info banner as requested
