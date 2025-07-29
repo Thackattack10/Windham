@@ -3,7 +3,7 @@ import pandas as pd
 from projections import project_golf_points
 from optimizer import optimize_lineup
 
-# --- Custom CSS with dimmed background and smaller file uploader ---
+# --- Custom CSS with dimmed background ---
 st.markdown(
     """
     <style>
@@ -33,27 +33,6 @@ st.markdown(
 
     .block-container {
         padding-top: 2rem;
-    }
-
-    /* Aggressively shrink the file uploader boxes */
-    .stFileUploader {
-        max-height: 50px !important;
-        font-size: 0.85rem !important;
-    }
-    .stFileUploader > div > label {
-        padding: 4px 8px !important;
-        min-height: 40px !important;
-        font-size: 0.85rem !important;
-    }
-    .stFileUploader > div > label > div {
-        min-height: 40px !important;
-        padding: 4px 8px !important;
-        font-size: 0.85rem !important;
-    }
-    .stFileUploader > div > label > div > div:last-child {
-        height: 28px !important;
-        font-size: 0.85rem !important;
-        padding: 0 8px !important;
     }
     </style>
     """,
