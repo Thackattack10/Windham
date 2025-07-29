@@ -35,13 +35,22 @@ st.markdown(
         padding-top: 2rem;
     }
 
-    /* Smaller file uploader boxes */
-    div.stFileUploader > div > label > div {
+    /* Aggressively shrink the file uploader boxes */
+    .stFileUploader {
+        max-height: 50px !important;
+        font-size: 0.85rem !important;
+    }
+    .stFileUploader > div > label {
+        padding: 4px 8px !important;
+        min-height: 40px !important;
+        font-size: 0.85rem !important;
+    }
+    .stFileUploader > div > label > div {
         min-height: 40px !important;
         padding: 4px 8px !important;
         font-size: 0.85rem !important;
     }
-    div.stFileUploader > div > label > div > div:nth-child(2) {
+    .stFileUploader > div > label > div > div:last-child {
         height: 28px !important;
         font-size: 0.85rem !important;
         padding: 0 8px !important;
