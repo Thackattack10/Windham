@@ -60,7 +60,7 @@ if salary_file:
 
     # Show player pool
     st.subheader("📋 Player Pool")
-    st.dataframe(df[['Nickname', 'Salary', 'Driving', 'Putting', 'RecentForm', 'ProjectedPoints']].sort_values(by='ProjectedPoints', ascending=False))
+    st.dataframe(df[['Nickname', 'Salary','ProjectedPoints']].sort_values(by='ProjectedPoints', ascending=False))
 
     # Lock players
     locked_players = st.multiselect("🔒 Lock In Specific Players", options=df['Nickname'].tolist())
