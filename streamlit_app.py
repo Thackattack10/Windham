@@ -52,52 +52,57 @@ if fanduel_file and putting_file:
         df_fd = pd.read_csv(fanduel_file)
         df_putting = pd.read_csv(putting_file)
     except Exception as e:
-        st.error(f"Error reading CSV files: {e}")
+        st.error(f"Error reading FanDuel or Putting CSV files: {e}")
         st.stop()
 
-    # Clean and merge putting data
+    # Clean player names to lowercase and strip whitespace for merging
     df_fd['PLAYER'] = df_fd['Nickname'].str.strip().str.lower()
     df_putting['PLAYER'] = df_putting['PLAYER'].str.strip().str.lower()
+
+    # Merge putting data
     df = pd.merge(df_fd, df_putting[['PLAYER', 'AVG']], on='PLAYER', how='left')
     df.rename(columns={'AVG': 'SG_Putting'}, inplace=True)
     df['SG_Putting'] = df['SG_Putting'].fillna(0)
 
-    # If approach file uploaded, merge it
+    # Merge approach data if uploaded
     if approach_file:
         try:
             df_approach = pd.read_csv(approach_file)
             df_approach['PLAYER'] = df_approach['PLAYER'].str.strip().str.lower()
-            df = pd.merge(df, df_approach[['PLAYER', 'AVG']], on='PLAYER', how='left', suffixes=('', '_APP'))
-            df.rename(columns={'AVG_APP': 'SG_APP'}, inplace=True)
+
+            if 'AVG' not in df_approach.columns:
+                st.error("The approach CSV must have an 'AVG' column with the SG approach values.")
+                st.stop()
+
+            df = pd.merge(df, df_approach[['PLAYER', 'AVG']], on='PLAYER', how='left')
+            df.rename(columns={'AVG': 'SG_APP'}, inplace=True)
+            df['SG_APP'] = df['SG_APP'].fillna(0)
+
         except Exception as e:
             st.error(f"Error reading Strokes Gained Approach CSV: {e}")
             st.stop()
-
-    # Make sure SG_APP exists
-    if 'SG_APP' in df.columns:
-        df['SG_APP'] = df['SG_APP'].fillna(0)
     else:
-        df['SG_APP'] = 0
+        df['SG_APP'] = 0  # No approach file uploaded, fill with zero
 
-    # Validate required columns
+    # Validate required columns for projection
     required_columns = ['Nickname', 'Salary', 'FPPG', 'SG_Putting', 'SG_APP']
     missing_cols = [col for col in required_columns if col not in df.columns]
     if missing_cols:
         st.error(f"Missing required columns: {missing_cols}")
         st.stop()
 
-    # Calculate projections
+    # Compute projected points using your projection function
     df['ProjectedPoints'] = df.apply(project_golf_points, axis=1)
 
     # Show player pool
     st.subheader("📋 Player Pool")
     st.dataframe(df[['Nickname', 'Salary', 'FPPG', 'SG_Putting', 'SG_APP', 'ProjectedPoints']].sort_values(by='ProjectedPoints', ascending=False))
 
-    # Lock / exclude players
+    # Player lock/exclude UI
     locked_players = st.multiselect("🔒 Lock In Specific Players", options=df['Nickname'].tolist())
     excluded_players = st.multiselect("🚫 Exclude These Players", options=df['Nickname'].tolist())
 
-    # Filter players accordingly
+    # Filter dataframe accordingly
     filtered_df = df[~df['Nickname'].isin(excluded_players)].copy()
     filtered_df['Locked'] = filtered_df['Nickname'].isin(locked_players)
 
@@ -112,3 +117,5 @@ if fanduel_file and putting_file:
             st.write(f"📈 Projected Points: {lineup['ProjectedPoints'].sum():.2f}")
         except ValueError as ve:
             st.error(str(ve))
+else:
+    st.info("Please upload both FanDuel CSV and Strokes Gained Putting CSV to get started.")
