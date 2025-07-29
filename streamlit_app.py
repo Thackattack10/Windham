@@ -48,19 +48,19 @@ if salary_file:
         st.error(f"Error loading CSV file: {e}")
         st.stop()
 
-    # Validate required columns
-    required_columns = ['Nickname', 'Salary']
+    # Only require what we actually use
+    required_columns = ['Nickname', 'Salary', 'FPPG']
     missing_cols = [col for col in required_columns if col not in df.columns]
     if missing_cols:
         st.error(f"Missing required columns: {missing_cols}")
         st.stop()
 
-    # Apply projection function (fixed weights inside projections.py)
+    # Apply FPPG as projected points
     df['ProjectedPoints'] = df.apply(project_golf_points, axis=1)
 
     # Show player pool
     st.subheader("📋 Player Pool")
-    st.dataframe(df[['Nickname', 'Salary','ProjectedPoints']].sort_values(by='ProjectedPoints', ascending=False))
+    st.dataframe(df[['Nickname', 'Salary', 'FPPG', 'ProjectedPoints']].sort_values(by='ProjectedPoints', ascending=False))
 
     # Lock players
     locked_players = st.multiselect("🔒 Lock In Specific Players", options=df['Nickname'].tolist())
