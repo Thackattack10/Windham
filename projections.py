@@ -1,2 +1,4 @@
 def project_golf_points(row):
-    return row.get('Driving', 0)*0.4 + row.get('Putting', 0)*0.5 + row.get('RecentForm', 0)*0.3
+    # Simple projection: just salary scaled down (example)
+    # You can tweak the multiplier to your liking
+    return row['Salary'] * 0.0005
