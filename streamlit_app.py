@@ -49,5 +49,7 @@ if salary_file:
         st.stop()
 
     required_columns = ['Nickname', 'Salary']
-    if not all(col in df.columns for col in required_columns):
-        st.error(f"CSV must contain columns: {',
+if not all(col in df.columns for col in required_columns):
+    st.error(f"CSV must contain columns: {', '.join(required_columns)}")
+    st.stop()
+
