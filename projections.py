@@ -1,10 +1,11 @@
 def project_golf_points(row):
-    # Simple weighted projection formula using FPPG and Strokes Gained Putting
-    fppg_weight = 0.7
-    sg_putting_weight = 0.3
-
+    """
+    Projection formula combining FPPG and SG Putting.
+    You can adjust weights here as you like.
+    """
     fppg = row.get('FPPG', 0)
     sg_putting = row.get('SG_Putting', 0)
 
-    projection = fppg_weight * fppg + sg_putting_weight * sg_putting
+    # Example weights: 80% FPPG + 20% SG Putting
+    projection = fppg * 0.8 + sg_putting * 0.2
     return projection
