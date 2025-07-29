@@ -49,47 +49,59 @@ if salary_file:
         st.error(f"Error loading FanDuel CSV file: {e}")
         st.stop()
 
-    # Validate required columns in FanDuel CSV
+    # Required columns in FanDuel CSV
     required_cols = ['Nickname', 'First Name', 'Salary', 'FPPG']
     missing_cols = [col for col in required_cols if col not in df.columns]
     if missing_cols:
         st.error(f"Missing required columns in FanDuel CSV: {missing_cols}")
         st.stop()
 
-    # --- Merge putting data if provided ---
+    # Merge putting stats if provided
     if putting_file:
         try:
             putting_df = pd.read_csv(putting_file)
-
-            # Rename columns for merging
+            # Rename columns for merge
             putting_df.rename(columns={'PLAYER': 'FullName', 'AVG': 'SG_Putting'}, inplace=True)
-
-            # Normalize names: lowercase, strip whitespace
+            # Normalize names
             putting_df['FullName'] = putting_df['FullName'].str.strip().str.lower()
             df['FullName'] = (df['First Name'] + ' ' + df['Nickname']).str.strip().str.lower()
-
-            # Merge putting stats into main df
+            # Merge on FullName
             df = pd.merge(df, putting_df[['FullName', 'SG_Putting']], on='FullName', how='left')
-
-            # Fill missing strokes gained putting with 0
             df['SG_Putting'] = df['SG_Putting'].fillna(0)
-
         except Exception as e:
-            st.warning(f"Couldn't merge putting data: {e}")
+            st.warning(f"Could not merge putting data: {e}")
             df['SG_Putting'] = 0
     else:
         df['SG_Putting'] = 0
 
-    # Apply projection function (from projections.py)
+    # Calculate projections
     df['ProjectedPoints'] = df.apply(project_golf_points, axis=1)
 
     # Show player pool
     st.subheader("📋 Player Pool")
     st.dataframe(
-        df[['Nickname', 'First Name', 'Salary', 'FPPG', 'SG_Putting', 'ProjectedPoints']].sort_values(
-            by='ProjectedPoints', ascending=False
-        )
+        df[['Nickname', 'First Name', 'Salary', 'FPPG', 'SG_Putting', 'ProjectedPoints']]
+        .sort_values(by='ProjectedPoints', ascending=False)
     )
 
-    # Lock players
-    locked_players = st.multiselect("🔒 Lock In Specific Players", options=df[']()_
+    # Lock and exclude players
+    locked_players = st.multiselect("🔒 Lock In Specific Players", options=df['Nickname'].tolist())
+    excluded_players = st.multiselect("🚫 Exclude These Players", options=df['Nickname'].tolist())
+
+    filtered_df = df[~df['Nickname'].isin(excluded_players)].copy()
+    filtered_df['Locked'] = filtered_df['Nickname'].isin(locked_players)
+
+    # Optimize button
+    st.subheader("🎯 Optimize Your Lineup")
+    if st.button("Run Optimizer"):
+        try:
+            lineup = optimize_lineup(filtered_df)
+            st.success("✅ Optimized lineup found!")
+            st.dataframe(lineup[['Nickname', 'First Name', 'Salary', 'ProjectedPoints']].reset_index(drop=True))
+            st.write(f"💰 Total Salary: {lineup['Salary'].sum()}")
+            st.write(f"📈 Projected Points: {lineup['ProjectedPoints'].sum():.2f}")
+        except ValueError as ve:
+            st.error(str(ve))
+
+else:
+    st.info("Please upload a FanDuel CSV file to start.")
