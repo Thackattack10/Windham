@@ -7,7 +7,7 @@ def optimize_lineup(players_df, salary_cap=60000):
     Args:
         players_df (pd.DataFrame): DataFrame with players. Must include:
             - 'Salary'
-            - 'ProjectedPoints' or 'Projection'
+            - 'ProjectedPoints'
             - 'Locked' (bool) column, True if player must be included.
         salary_cap (int): Salary cap, default 60,000.
 
@@ -18,10 +18,8 @@ def optimize_lineup(players_df, salary_cap=60000):
 
     player_vars = {idx: LpVariable(f"x{idx}", cat='Binary') for idx in players_df.index}
 
-    points_col = 'ProjectedPoints' if 'ProjectedPoints' in players_df.columns else 'Projection'
-
     # Objective: maximize projected points
-    prob += lpSum(players_df.loc[idx, points_col] * player_vars[idx] for idx in players_df.index)
+    prob += lpSum(players_df.loc[idx, 'ProjectedPoints'] * player_vars[idx] for idx in players_df.index)
 
     # Salary cap constraint
     prob += lpSum(players_df.loc[idx, 'Salary'] * player_vars[idx] for idx in players_df.index) <= salary_cap
