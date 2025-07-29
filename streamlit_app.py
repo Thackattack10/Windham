@@ -1,8 +1,7 @@
 import streamlit as st
 import pandas as pd
-from projections import project_golf_points_factory
+from projections import project_golf_points
 from optimizer import optimize_lineup
-from sklearn.preprocessing import MinMaxScaler
 
 # --- Custom CSS ---
 st.markdown(
@@ -39,12 +38,6 @@ st.markdown(
 # --- Title ---
 st.markdown('<h1 class="grass-title">⛳️ Mikey\'s Golf Optimizer</h1>', unsafe_allow_html=True)
 
-# --- Sidebar sliders for projection weights ---
-st.sidebar.subheader("📊 Projection Weights")
-driving_weight = st.sidebar.slider("Driving Weight", 0.0, 1.0, 0.4)
-putting_weight = st.sidebar.slider("Putting Weight", 0.0, 1.0, 0.5)
-form_weight = st.sidebar.slider("Recent Form Weight", 0.0, 1.0, 0.3)
-
 # --- Upload CSV ---
 salary_file = st.file_uploader("Upload FanDuel Golf CSV", type="csv")
 
@@ -62,19 +55,12 @@ if salary_file:
         st.error(f"Missing required columns: {missing_cols}")
         st.stop()
 
-    # Normalize stats
-    scaler = MinMaxScaler()
-    df[['Driving', 'Putting', 'RecentForm']] = scaler.fit_transform(df[['Driving', 'Putting', 'RecentForm']])
+    # Apply projection function (fixed weights inside projections.py)
+    df['ProjectedPoints'] = df.apply(project_golf_points, axis=1)
 
-    # Create projection function with user weights
-    projector = project_golf_points_factory(driving_weight, putting_weight, form_weight)
-    df['ProjectedPoints'] = df.apply(projector, axis=1)
-
-    # --- Filter and player selection UI ---
-    st.subheader("🔍 Filter & Customize Your Pool")
-
-    with st.expander("📋 View Full Player Pool"):
-        st.dataframe(df[['Nickname', 'Salary', 'Driving', 'Putting', 'RecentForm', 'ProjectedPoints']].sort_values(by='ProjectedPoints', ascending=False))
+    # Show player pool
+    st.subheader("📋 Player Pool")
+    st.dataframe(df[['Nickname', 'Salary', 'Driving', 'Putting', 'RecentForm', 'ProjectedPoints']].sort_values(by='ProjectedPoints', ascending=False))
 
     # Lock players
     locked_players = st.multiselect("🔒 Lock In Specific Players", options=df['Nickname'].tolist())
@@ -86,19 +72,17 @@ if salary_file:
     filtered_df = df[~df['Nickname'].isin(excluded_players)].copy()
     filtered_df['Locked'] = filtered_df['Nickname'].isin(locked_players)
 
-    # --- Run optimizer ---
+    # Optimize lineup button
     st.subheader("🎯 Optimize Your Lineup")
-
     if st.button("Run Optimizer"):
         try:
             lineup = optimize_lineup(filtered_df)
             st.success("✅ Optimized lineup found!")
-
             st.dataframe(lineup[['Nickname', 'Salary', 'ProjectedPoints']].reset_index(drop=True))
             st.write(f"💰 Total Salary: {lineup['Salary'].sum()}")
             st.write(f"📈 Projected Points: {lineup['ProjectedPoints'].sum():.2f}")
-
         except ValueError as ve:
             st.error(str(ve))
+
 else:
     st.info("Please upload a FanDuel CSV file to start.")
