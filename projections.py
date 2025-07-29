@@ -8,5 +8,5 @@ def project_golf_points(row):
     sg_app = row.get('SG_APP', 0)
 
     # Example weights: 60% FPPG + 20% SG Putting + 20% SG Approach
-    projection = fppg * 0.6 + sg_putting * 0.2 + sg_app * 0.2
+    projection = fppg * 0.4 + sg_putting * 0.3 + sg_app * 0.3
     return projection
