@@ -3,7 +3,7 @@ import pandas as pd
 from projections import project_golf_points
 from optimizer import optimize_lineup
 
-# --- Custom CSS with dimmed background ---
+# --- Custom CSS with dimmed background and smaller file uploader ---
 st.markdown(
     """
     <style>
@@ -34,6 +34,18 @@ st.markdown(
     .block-container {
         padding-top: 2rem;
     }
+
+    /* Smaller file uploader boxes */
+    div.stFileUploader > div > label > div {
+        min-height: 40px !important;
+        padding: 4px 8px !important;
+        font-size: 0.85rem !important;
+    }
+    div.stFileUploader > div > label > div > div:nth-child(2) {
+        height: 28px !important;
+        font-size: 0.85rem !important;
+        padding: 0 8px !important;
+    }
     </style>
     """,
     unsafe_allow_html=True
@@ -55,7 +67,7 @@ if fanduel_file and putting_file:
         st.error(f"Error reading FanDuel or Putting CSV files: {e}")
         st.stop()
 
-    # Clean player names to lowercase and strip whitespace for merging
+    # Clean player names
     df_fd['PLAYER'] = df_fd['Nickname'].str.strip().str.lower()
     df_putting['PLAYER'] = df_putting['PLAYER'].str.strip().str.lower()
 
@@ -84,25 +96,25 @@ if fanduel_file and putting_file:
     else:
         df['SG_APP'] = 0  # No approach file uploaded, fill with zero
 
-    # Validate required columns for projection
+    # Validate columns
     required_columns = ['Nickname', 'Salary', 'FPPG', 'SG_Putting', 'SG_APP']
     missing_cols = [col for col in required_columns if col not in df.columns]
     if missing_cols:
         st.error(f"Missing required columns: {missing_cols}")
         st.stop()
 
-    # Compute projected points using your projection function
+    # Projection
     df['ProjectedPoints'] = df.apply(project_golf_points, axis=1)
 
     # Show player pool
     st.subheader("📋 Player Pool")
     st.dataframe(df[['Nickname', 'Salary', 'FPPG', 'SG_Putting', 'SG_APP', 'ProjectedPoints']].sort_values(by='ProjectedPoints', ascending=False))
 
-    # Player lock/exclude UI
+    # Lock / exclude players
     locked_players = st.multiselect("🔒 Lock In Specific Players", options=df['Nickname'].tolist())
     excluded_players = st.multiselect("🚫 Exclude These Players", options=df['Nickname'].tolist())
 
-    # Filter dataframe accordingly
+    # Filter
     filtered_df = df[~df['Nickname'].isin(excluded_players)].copy()
     filtered_df['Locked'] = filtered_df['Nickname'].isin(locked_players)
 
