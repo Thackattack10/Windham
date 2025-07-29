@@ -1,5 +1,3 @@
-# optimizer.py
-
 from pulp import LpMaximize, LpProblem, LpVariable, lpSum, LpStatusOptimal
 
 def optimize_lineup(players_df, salary_cap=60000):
@@ -26,4 +24,22 @@ def optimize_lineup(players_df, salary_cap=60000):
     prob += lpSum(players_df.loc[idx, points_col] * player_vars[idx] for idx in players_df.index)
 
     # Salary cap constraint
-    prob += lpSum(players_df.loc[idx, 'Salary'] * player_vars[idx] for idx in_*_
+    prob += lpSum(players_df.loc[idx, 'Salary'] * player_vars[idx] for idx in players_df.index) <= salary_cap
+
+    # Must pick exactly 6 players
+    prob += lpSum(player_vars.values()) == 6
+
+    # Locked players must be included
+    locked_players = players_df[players_df.get('Locked', False)].index
+    for idx in locked_players:
+        prob += player_vars[idx] == 1
+
+    # Solve the problem
+    status = prob.solve()
+
+    if status != LpStatusOptimal:
+        raise ValueError("No optimal lineup found under current constraints.")
+
+    selected = [idx for idx, var in player_vars.items() if var.value() == 1]
+
+    return players_df.loc[selected]
