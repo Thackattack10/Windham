@@ -40,6 +40,7 @@ st.markdown('<h1 class="grass-title">⛳️ Mikey\'s Golf Optimizer</h1>', unsaf
 
 # --- Upload CSV ---
 salary_file = st.file_uploader("Upload FanDuel Golf CSV", type="csv")
+putting_file = st.file_uploader("Upload Strokes Gained Putting CSV", type="csv")
 
 if salary_file:
     try:
