@@ -38,52 +38,79 @@ st.markdown(
 # --- Title ---
 st.markdown('<h1 class="grass-title">⛳️ Mikey\'s Golf Optimizer</h1>', unsafe_allow_html=True)
 
-# --- Upload CSV ---
+# --- Upload CSVs ---
 salary_file = st.file_uploader("Upload FanDuel Golf CSV", type="csv")
-putting_file = st.file_uploader("Upload Strokes Gained Putting CSV", type="csv")
+putting_file = st.file_uploader("Upload Strokes Gained Putting CSV (Optional)", type="csv")
 
 if salary_file:
     try:
         df = pd.read_csv(salary_file)
     except Exception as e:
-        st.error(f"Error loading CSV file: {e}")
+        st.error(f"Error loading FanDuel CSV: {e}")
         st.stop()
 
-    # Only require what we actually use
-    required_columns = ['Nickname', 'Salary', 'FPPG']
+    # Check required columns
+    required_columns = ['Nickname', 'Salary']
     missing_cols = [col for col in required_columns if col not in df.columns]
     if missing_cols:
-        st.error(f"Missing required columns: {missing_cols}")
+        st.error(f"Missing required columns in FanDuel CSV: {missing_cols}")
         st.stop()
 
-    # Apply FPPG as projected points
+    # Load and merge strokes gained putting CSV
+    if putting_file:
+        try:
+            putting_df = pd.read_csv(putting_file)
+            if 'Player' in putting_df.columns:
+                putting_df.rename(columns={'Player': 'Nickname'}, inplace=True)
+            df = pd.merge(df, putting_df[['Nickname', 'SG_Putting']], on='Nickname', how='left')
+        except Exception as e:
+            st.warning(f"Couldn't merge putting data: {e}")
+            df['SG_Putting'] = 0
+    else:
+        df['SG_Putting'] = 0
+
+    # --- Apply projection ---
     df['ProjectedPoints'] = df.apply(project_golf_points, axis=1)
 
-    # Show player pool
+    # --- Show player pool ---
     st.subheader("📋 Player Pool")
-    st.dataframe(df[['Nickname', 'Salary', 'FPPG', 'ProjectedPoints']].sort_values(by='ProjectedPoints', ascending=False))
+    st.dataframe(df[['Nickname', 'Salary', 'SG_Putting', 'ProjectedPoints']].sort_values(by='ProjectedPoints', ascending=False))
 
-    # Lock players
+    # --- Lock and exclude players ---
     locked_players = st.multiselect("🔒 Lock In Specific Players", options=df['Nickname'].tolist())
-
-    # Exclude players
     excluded_players = st.multiselect("🚫 Exclude These Players", options=df['Nickname'].tolist())
 
     # Filter out excluded players
     filtered_df = df[~df['Nickname'].isin(excluded_players)].copy()
     filtered_df['Locked'] = filtered_df['Nickname'].isin(locked_players)
 
-    # Optimize lineup button
+    # --- Number of lineups ---
+    num_lineups = st.number_input("🧮 How many unique lineups?", min_value=1, max_value=20, value=1)
+
+    # --- Run optimizer ---
     st.subheader("🎯 Optimize Your Lineup")
     if st.button("Run Optimizer"):
-        try:
-            lineup = optimize_lineup(filtered_df)
-            st.success("✅ Optimized lineup found!")
-            st.dataframe(lineup[['Nickname', 'Salary', 'ProjectedPoints']].reset_index(drop=True))
-            st.write(f"💰 Total Salary: {lineup['Salary'].sum()}")
-            st.write(f"📈 Projected Points: {lineup['ProjectedPoints'].sum():.2f}")
-        except ValueError as ve:
-            st.error(str(ve))
+        used_players = set()
+        all_lineups = []
+
+        for i in range(num_lineups):
+            temp_df = filtered_df[~filtered_df['Nickname'].isin(used_players)].copy()
+
+            try:
+                lineup = optimize_lineup(temp_df)
+                all_lineups.append(lineup)
+                used_players.update(lineup['Nickname'])
+            except ValueError:
+                st.warning(f"❌ Could not generate lineup #{i+1} — not enough unique players.")
+                break
+
+        if all_lineups:
+            st.success(f"✅ Generated {len(all_lineups)} unique lineup(s)!")
+            for i, lineup in enumerate(all_lineups):
+                st.subheader(f"📋 Lineup #{i+1}")
+                st.dataframe(lineup[['Nickname', 'Salary', 'ProjectedPoints']].reset_index(drop=True))
+                st.write(f"💰 Total Salary: {lineup['Salary'].sum()}")
+                st.write(f"📈 Projected Points: {lineup['ProjectedPoints'].sum():.2f}")
 
 else:
-    st.info("Please upload a FanDuel CSV file to start.")
+    st.info("Please upload a FanDuel CSV file to get started.")
