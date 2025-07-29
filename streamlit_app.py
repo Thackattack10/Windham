@@ -27,3 +27,26 @@ st.markdown(
     }
 
     .block-container {
+        padding-top: 2rem;
+    }
+
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+# 🌱 --- Big Green Grass Title ---
+st.markdown('<h1 class="grass-title">⛳️ Mikey\'s Golf Optimizer</h1>', unsafe_allow_html=True)
+
+# 📤 Upload CSV
+salary_file = st.file_uploader("Upload FanDuel Golf CSV", type="csv")
+
+if salary_file:
+    try:
+        df = pd.read_csv(salary_file)
+    except Exception as e:
+        st.error(f"Error loading CSV file: {e}")
+        st.stop()
+
+    required_columns = ['Nickname', 'Salary']
+    if not all(col in df.columns for col in required_columns):
