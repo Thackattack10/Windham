@@ -138,5 +138,4 @@ if salary_file:
         except ValueError as ve:
             st.error(str(ve))
 
-else:
-    st.info("Please upload the FanDuel CSV file to start.")
+
