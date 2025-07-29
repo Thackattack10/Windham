@@ -1,102 +1,68 @@
-from projections import project_golf_points
-from optimizer import optimize_golf_lineup
 import streamlit as st
 import pandas as pd
+from projections import project_golf_points
+from optimizer import optimize_lineup
 
-# --- 🎨 Retro Golf Style + Background ---
+# --- Retro Neon Style ---
 st.markdown(
-    f"""
+    """
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
-
-    .stApp {{
-        background: linear-gradient(rgba(0,0,0,0.7),rgba(0,0,0,0.7)),
-                    url("https://cdn.pixabay.com/photo/2017/06/02/18/24/golf-2374814_1280.jpg");
-        background-size: cover;
-        background-position: center;
-        font-family: 'Press Start 2P', monospace;
-        color: #00ffff;
-    }}
-
-    h1.neon-title {{
-        font-size: 2.5rem;
-        text-align: center;
-        color: #00ccff;
+    body, .stApp {
+        background: radial-gradient(circle at center, #1b2735 0%, #090a0f 100%);
+        color: #39ff14;
+        font-family: 'Press Start 2P', cursive;
+    }
+    .stTitle {
+        font-size: 3rem;
         text-shadow:
-            0 0 5px #00ccff,
-            0 0 10px #00ccff,
-            0 0 20px #00ccff,
-            0 0 40px #00ccff,
-            0 0 80px #00ccff;
-        animation: flicker 1.8s infinite alternate;
-        margin-bottom: 2rem;
-    }}
-
-    .stButton button {{
-        background-color: #00ccff;
-        color: black;
-        font-weight: bold;
-        border-radius: 8px;
-        padding: 10px 20px;
-        border: 2px solid #00ffff;
-        box-shadow: 0 0 10px #00ccff;
-    }}
-
-    .stDataFrame, .stTable {{
-        background-color: rgba(0,0,0,0.85);
-        color: #00ffff;
-        font-size: 10px;
-    }}
-
-    @keyframes flicker {{
-        0% {{ opacity: 1; }}
-        50% {{ opacity: 0.8; }}
-        100% {{ opacity: 1; }}
-    }}
+            0 0 5px #39ff14,
+            0 0 10px #39ff14,
+            0 0 20px #0fa,
+            0 0 30px #0fa,
+            0 0 40px #0fa;
+    }
     </style>
     """,
-    unsafe_allow_html=True
+    unsafe_allow_html=True,
 )
 
-# --- 🏌️‍♂️ Neon Title ---
-st.markdown('<h1 class="neon-title">⛳ Mikey\'s Golf DFS Optimizer ⛳</h1>', unsafe_allow_html=True)
+st.markdown('<h1 class="stTitle">⛳️ Golf FanDuel Optimizer ⛳️</h1>', unsafe_allow_html=True)
 
-# --- Upload PGA DFS CSV ---
 salary_file = st.file_uploader("Upload FanDuel Golf CSV", type="csv")
 
 if salary_file:
     try:
         df = pd.read_csv(salary_file)
     except Exception as e:
-        st.error(f"Error loading CSV: {e}")
+        st.error(f"Error loading CSV file: {e}")
         st.stop()
 
-    required_columns = ['Nickname','Salary','Course']
+    required_columns = ['Nickname', 'Salary']
     if not all(col in df.columns for col in required_columns):
-        st.error(f"Missing columns: {', '.join(required_columns)}")
+        st.error(f"CSV must contain columns: {', '.join(required_columns)}")
         st.stop()
 
-    # Add or calculate stats
-    df['Driving'] = df.get('Driving', 0)
-    df['Putting'] = df.get('Putting', 0)
-    df['RecentForm'] = df.get('RecentForm', 0)
+    # Add placeholder stats (replace with your actual stats or data scrape)
+    df['StrokesGained'] = 0.5  # example stat
+    df['DrivingAccuracy'] = 0.7
+    df['GreensInRegulation'] = 0.65
 
-    # Project points
+    # Calculate projections using your function
     df['Projection'] = df.apply(project_golf_points, axis=1)
     df['Projection'].fillna(0, inplace=True)
 
-    st.subheader("📊 Player Projections")
-    st.dataframe(df.sort_values('Projection', ascending=False))
+    st.subheader("Player Projections")
+    st.dataframe(df.sort_values("Projection", ascending=False))
 
-    # Optimize lineup
-    st.subheader("🧮 Optimized Golf Lineup")
-    lineup = optimize_golf_lineup(df)
-    st.dataframe(lineup[['Nickname','Course','Salary','Projection']])
+    st.subheader("Optimized Lineup")
+    lineup = optimize_lineup(df)
+    st.dataframe(lineup[['Nickname', 'Salary', 'Projection']])
 
     total_salary = lineup['Salary'].sum()
-    total_projection = lineup['Projection'].sum()
+    total_proj = lineup['Projection'].sum()
     st.write(f"**Total Salary:** ${total_salary}")
-    st.write(f"**Total Projected Points:** {total_projection:.2f}")
+    st.write(f"**Total Projected Points:** {total_proj:.2f}")
 
 else:
-    st.info("Please upload a FanDuel golf salary CSV file to get started.")
+    st.info("Please upload your FanDuel golf CSV file to get started.")
