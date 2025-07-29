@@ -49,7 +49,7 @@ if salary_file:
         st.stop()
 
     # Validate required columns
-    required_columns = ['Nickname', 'Salary', 'Driving', 'Putting', 'RecentForm']
+    required_columns = ['Nickname', 'Salary']
     missing_cols = [col for col in required_columns if col not in df.columns]
     if missing_cols:
         st.error(f"Missing required columns: {missing_cols}")
