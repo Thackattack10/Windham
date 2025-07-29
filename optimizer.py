@@ -1,43 +1,51 @@
-from pulp import LpMaximize, LpProblem, LpVariable, lpSum, LpStatusOptimal
+import pandas as pd
+from pulp import LpMaximize, LpProblem, LpVariable, lpSum, LpBinary
 
-def optimize_lineup(players_df, salary_cap=60000):
+
+def optimize_lineup(df, lineup_size=6, salary_cap=60000):
     """
-    Optimize a golf lineup for FanDuel golf contest.
-
-    Args:
-        players_df (pd.DataFrame): DataFrame with players. Must include:
-            - 'Salary'
-            - 'ProjectedPoints'
-            - 'Locked' (bool) column, True if player must be included.
-        salary_cap (int): Salary cap, default 60,000.
+    Optimize a DFS golf lineup using projected points (including SG:APP).
+    
+    Parameters:
+    - df: DataFrame containing player data with 'Nickname', 'Salary', 'ProjectedPoints', 'Locked'
+    - lineup_size: number of golfers to include in the lineup
+    - salary_cap: total salary cap for the lineup
 
     Returns:
-        pd.DataFrame: Selected lineup with exactly 6 players, including all locked players.
+    - DataFrame with selected players
     """
-    prob = LpProblem("FanDuel_Golf", LpMaximize)
+    if df.empty:
+        raise ValueError("Input DataFrame is empty.")
 
-    player_vars = {idx: LpVariable(f"x{idx}", cat='Binary') for idx in players_df.index}
+    # Define LP problem
+    prob = LpProblem("DFS_Golf_Lineup", LpMaximize)
 
-    # Objective: maximize projected points
-    prob += lpSum(players_df.loc[idx, 'ProjectedPoints'] * player_vars[idx] for idx in players_df.index)
+    # Create binary decision variables for each player
+    player_vars = {
+        idx: LpVariable(f"player_{idx}", cat=LpBinary)
+        for idx in df.index
+    }
 
-    # Salary cap constraint
-    prob += lpSum(players_df.loc[idx, 'Salary'] * player_vars[idx] for idx in players_df.index) <= salary_cap
+    # Objective: maximize total projected points
+    prob += lpSum(player_vars[i] * df.loc[i, 'ProjectedPoints'] for i in df.index)
 
-    # Must pick exactly 6 players
-    prob += lpSum(player_vars.values()) == 6
+    # Constraint: exactly `lineup_size` players
+    prob += lpSum(player_vars[i] for i in df.index) == lineup_size
 
-    # Locked players must be included
-    locked_players = players_df[players_df.get('Locked', False)].index
-    for idx in locked_players:
-        prob += player_vars[idx] == 1
+    # Constraint: total salary ≤ salary cap
+    prob += lpSum(player_vars[i] * df.loc[i, 'Salary'] for i in df.index) <= salary_cap
+
+    # Handle locked players
+    locked_players = df[df['Locked'] == True]
+    for i in locked_players.index:
+        prob += player_vars[i] == 1
 
     # Solve the problem
-    status = prob.solve()
+    result_status = prob.solve()
 
-    if status != LpStatusOptimal:
-        raise ValueError("No optimal lineup found under current constraints.")
+    # Extract selected lineup
+    selected_indices = [i for i in df.index if player_vars[i].value() == 1]
+    if len(selected_indices) != lineup_size:
+        raise ValueError("Unable to generate a valid lineup. Try adjusting player pool or constraints.")
 
-    selected = [idx for idx, var in player_vars.items() if var.value() == 1]
-
-    return players_df.loc[selected]
+    return df.loc[selected_indices].copy()
