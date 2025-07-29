@@ -1,4 +1,3 @@
 def project_golf_points(row):
-    # Simple projection: just salary scaled down (example)
-    # You can tweak the multiplier to your liking
+    # Project points from salary only (simple linear scaling)
     return row['Salary'] * 0.0005
