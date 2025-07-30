@@ -1,38 +1,34 @@
 import pandas as pd
+from pulp import LpMaximize, LpProblem, LpVariable, lpSum
+
 
 def optimize_lineup(df, salary_cap=60000, lineup_size=6):
-    """
-    Selects the optimal lineup of `lineup_size` players under `salary_cap`
-    maximizing ProjectedPoints.
-    """
+    # Create LP problem
+    model = LpProblem("GolfLineup", LpMaximize)
 
-    from itertools import combinations
+    # Create a binary variable for each player
+    player_vars = {i: LpVariable(f"player_{i}", cat="Binary") for i in df.index}
 
-    if len(df) < lineup_size:
-        raise ValueError("Not enough players to form a lineup.")
+    # Objective: Maximize projected points
+    model += lpSum(player_vars[i] * df.loc[i, "ProjectedPoints"] for i in df.index)
 
-    best_lineup = None
-    best_score = -1
+    # Constraint: Total salary
+    model += lpSum(player_vars[i] * df.loc[i, "Salary"] for i in df.index) <= salary_cap
 
-    locked = df[df['Locked']]
-    non_locked = df[~df['Locked']]
+    # Constraint: Exactly lineup_size players
+    model += lpSum(player_vars[i] for i in df.index) == lineup_size
 
-    if len(locked) > lineup_size:
-        raise ValueError("Too many locked players for lineup size.")
+    # Constraint: Locked players must be selected
+    for i in df[df['Locked']].index:
+        model += player_vars[i] == 1
 
-    remaining_spots = lineup_size - len(locked)
+    # Solve the problem
+    status = model.solve()
 
-    for combo in combinations(non_locked.index, remaining_spots):
-        selected = pd.concat([locked, non_locked.loc[list(combo)]])
-        total_salary = selected['Salary'].sum()
+    # Extract results
+    selected = [i for i in df.index if player_vars[i].value() == 1]
 
-        if total_salary <= salary_cap:
-            score = selected['ProjectedPoints'].sum()
-            if score > best_score:
-                best_score = score
-                best_lineup = selected.copy()
+    if not selected:
+        raise ValueError("No valid lineup found. Try relaxing constraints.")
 
-    if best_lineup is None:
-        raise ValueError("No valid lineup found under the salary cap.")
-
-    return best_lineup
+    return df.loc[selected]
