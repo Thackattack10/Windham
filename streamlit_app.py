@@ -117,5 +117,4 @@ if fanduel_file and putting_file:
             st.write(f"📈 Projected Points: {lineup['ProjectedPoints'].sum():.2f}")
         except ValueError as ve:
             st.error(str(ve))
-else:
-    st.info("Please upload both FanDuel CSV and Strokes Gained Putting CSV to get started.")
+
