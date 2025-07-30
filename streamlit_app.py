@@ -42,79 +42,66 @@ st.markdown(
 # --- Title ---
 st.markdown('<h1 class="grass-title">⛳️ Mikey\'s Golf Optimizer</h1>', unsafe_allow_html=True)
 
-# --- Upload CSVs ---
+# --- File Uploads ---
 fanduel_file = st.file_uploader("📤 Upload FanDuel CSV", type="csv", key="fd_csv")
 putting_file = st.file_uploader("📤 Upload Strokes Gained Putting CSV", type="csv", key="putting_csv")
 approach_file = st.file_uploader("📤 Upload Strokes Gained Approach CSV", type="csv", key="approach_csv")
 
-if fanduel_file and putting_file:
+if fanduel_file and putting_file and approach_file:
     try:
         df_fd = pd.read_csv(fanduel_file)
         df_putting = pd.read_csv(putting_file)
+        df_approach = pd.read_csv(approach_file)
     except Exception as e:
-        st.error(f"Error reading FanDuel or Putting CSV files: {e}")
+        st.error(f"Error reading CSV files: {e}")
         st.stop()
 
-    # Clean player names
+    # Normalize and merge player names
     df_fd['PLAYER'] = df_fd['Nickname'].str.strip().str.lower()
     df_putting['PLAYER'] = df_putting['PLAYER'].str.strip().str.lower()
+    df_approach['PLAYER'] = df_approach['PLAYER'].str.strip().str.lower()
 
-    # Merge putting data
+    # Merge in SG stats
     df = pd.merge(df_fd, df_putting[['PLAYER', 'AVG']], on='PLAYER', how='left')
     df.rename(columns={'AVG': 'SG_Putting'}, inplace=True)
+    df = pd.merge(df, df_approach[['PLAYER', 'AVG']], on='PLAYER', how='left')
+    df.rename(columns={'AVG': 'SG_APP'}, inplace=True)
+
+    # Fill missing SG values with 0
     df['SG_Putting'] = df['SG_Putting'].fillna(0)
+    df['SG_APP'] = df['SG_APP'].fillna(0)
 
-    # Merge approach data if uploaded
-    if approach_file:
-        try:
-            df_approach = pd.read_csv(approach_file)
-            df_approach['PLAYER'] = df_approach['PLAYER'].str.strip().str.lower()
-
-            if 'AVG' not in df_approach.columns:
-                st.error("The approach CSV must have an 'AVG' column with the SG approach values.")
-                st.stop()
-
-            df = pd.merge(df, df_approach[['PLAYER', 'AVG']], on='PLAYER', how='left')
-            df.rename(columns={'AVG': 'SG_APP'}, inplace=True)
-            df['SG_APP'] = df['SG_APP'].fillna(0)
-
-        except Exception as e:
-            st.error(f"Error reading Strokes Gained Approach CSV: {e}")
-            st.stop()
-    else:
-        df['SG_APP'] = 0  # No approach file uploaded, fill with zero
-
-    # Validate columns
+    # Validate required columns
     required_columns = ['Nickname', 'Salary', 'FPPG', 'SG_Putting', 'SG_APP']
     missing_cols = [col for col in required_columns if col not in df.columns]
     if missing_cols:
         st.error(f"Missing required columns: {missing_cols}")
         st.stop()
 
-    # Projection
+    # --- Projection Calculation ---
     df['ProjectedPoints'] = df.apply(project_golf_points, axis=1)
 
-    # Show player pool
+    # --- Player Pool Table ---
     st.subheader("📋 Player Pool")
-    st.dataframe(df[['Nickname', 'Salary', 'FPPG', 'SG_Putting', 'SG_APP', 'ProjectedPoints']].sort_values(by='ProjectedPoints', ascending=False))
+    st.dataframe(df[['Nickname', 'Salary', 'FPPG', 'SG_Putting', 'SG_APP', 'ProjectedPoints']]
+                 .sort_values(by='ProjectedPoints', ascending=False))
 
-    # Lock / exclude players
+    # --- Locks and Exclusions ---
     locked_players = st.multiselect("🔒 Lock In Specific Players", options=df['Nickname'].tolist())
     excluded_players = st.multiselect("🚫 Exclude These Players", options=df['Nickname'].tolist())
 
-    # Filter
+    # Apply locks/exclusions
     filtered_df = df[~df['Nickname'].isin(excluded_players)].copy()
     filtered_df['Locked'] = filtered_df['Nickname'].isin(locked_players)
 
-    # Run optimizer
+    # --- Run Optimizer ---
     st.subheader("🎯 Optimize Your Lineup")
     if st.button("Run Optimizer"):
         try:
-            lineup = optimize_lineup(filtered_df)
+            lineup = optimize_lineup(filtered_df.reset_index(drop=True), salary_cap=60000)
             st.success("✅ Optimized lineup found!")
-            st.dataframe(lineup[['Nickname', 'Salary', 'ProjectedPoints']].reset_index(drop=True))
-            st.write(f"💰 Total Salary: {lineup['Salary'].sum()}")
+            st.dataframe(lineup[['Nickname', 'Salary', 'FPPG', 'SG_Putting', 'SG_APP', 'ProjectedPoints']].reset_index(drop=True))
+            st.write(f"💰 Total Salary: ${lineup['Salary'].sum():,.0f}")
             st.write(f"📈 Projected Points: {lineup['ProjectedPoints'].sum():.2f}")
         except ValueError as ve:
             st.error(str(ve))
-
