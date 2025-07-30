@@ -1,7 +1,7 @@
 import pandas as pd
 import pulp
 
-def optimize_lineup(df, salary_cap=50000, lineup_size=6):
+def optimize_lineup(df, salary_cap=60000, lineup_size=6):
     """
     Optimizes a golf lineup maximizing ProjectedPoints under salary cap and lineup size constraints.
     Respects locked players and returns only selected players.
