@@ -3,11 +3,11 @@ import pandas as pd
 from projections import project_golf_points
 from optimizer import optimize_lineup
 
-# --- Custom CSS with arcade font and neon glow ---
+# --- Custom CSS with dimmed background ---
 st.markdown(
     """
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Press+Start+2P&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Luckiest+Guy&display=swap');
 
     .stApp {
         background-image: linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)),
@@ -17,7 +17,6 @@ st.markdown(
         background-repeat: no-repeat;
         background-attachment: fixed;
         color: #39ff14;
-        font-family: 'Press Start 2P', monospace;
     }
 
     .grass-title {
@@ -35,29 +34,6 @@ st.markdown(
     .block-container {
         padding-top: 2rem;
     }
-
-    /* Smaller file uploader box */
-    div[data-testid="stFileUploader"] {
-        padding: 4px !important;
-        margin-bottom: 10px !important;
-    }
-
-    /* Remove default drag and drop text */
-    div[data-testid="stFileDropzone"] > div:first-child {
-        display: none;
-    }
-
-    /* Neon effect for buttons, selects, and headers */
-    .stButton button, .stSelectbox label, .stMultiSelect label, .stSubheader {
-        font-family: 'Press Start 2P', monospace !important;
-        text-shadow: 0 0 5px #39ff14, 0 0 10px #39ff14;
-    }
-
-    /* DataFrame font */
-    .stDataFrame th, .stDataFrame td {
-        font-family: 'Press Start 2P', monospace !important;
-        font-size: 10px !important;
-    }
     </style>
     """,
     unsafe_allow_html=True
@@ -66,7 +42,7 @@ st.markdown(
 # --- Title ---
 st.markdown('<h1 class="grass-title">⛳️ Mikey\'s Golf Optimizer</h1>', unsafe_allow_html=True)
 
-# --- Upload FanDuel, SG Putting, and SG Approach CSVs ---
+# --- Upload FanDuel and SG Putting CSVs ---
 fanduel_file = st.file_uploader("📤 Upload FanDuel CSV", type="csv", key="fd_csv")
 putting_file = st.file_uploader("📤 Upload Strokes Gained Putting CSV", type="csv", key="putting_csv")
 approach_file = st.file_uploader("📤 Upload Strokes Gained Approach CSV", type="csv", key="approach_csv")
@@ -133,4 +109,3 @@ if fanduel_file and putting_file and approach_file:
             st.error(str(ve))
 else:
     st.info("Please upload all three CSV files: FanDuel, SG Putting, and SG Approach.")
-
