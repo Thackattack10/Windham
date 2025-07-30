@@ -43,9 +43,38 @@ st.markdown(
 st.markdown('<h1 class="grass-title">⛳️ Mikey\'s Golf Optimizer</h1>', unsafe_allow_html=True)
 
 # --- Upload FanDuel and SG Putting CSVs ---
-fanduel_file = st.file_uploader("📤 Upload FanDuel CSV", type="csv", key="fd_csv")
-putting_file = st.file_uploader("📤 Upload Strokes Gained Putting CSV", type="csv", key="putting_csv")
-approach_file = st.file_uploader("📤 Upload Strokes Gained Approach CSV", type="csv", key="approach_csv")
+fanduel_file = st.file_uploader(
+    "📤 Upload FanDuel CSV", type="csv", key="fd_csv",
+    help="Drag and drop your FanDuel CSV here",
+)
+putting_file = st.file_uploader(
+    "📤 Upload Strokes Gained Putting CSV", type="csv", key="putting_csv",
+    help="Drag and drop your SG Putting CSV here",
+)
+approach_file = st.file_uploader(
+    "📤 Upload Strokes Gained Approach CSV", type="csv", key="approach_csv",
+    help="Drag and drop your SG Approach CSV here",
+)
+
+# Use CSS to shrink the file uploader boxes by targeting Streamlit's classes
+st.markdown(
+    """
+    <style>
+    /* Shrink the file uploader containers */
+    div[data-testid="fileUploaderDropzone"] {
+        max-width: 300px;
+        max-height: 60px;
+        font-size: 0.9rem;
+        padding: 8px 10px;
+    }
+    /* Shrink the dropzone text */
+    div[data-testid="fileUploaderDropzone"] > label > div {
+        font-size: 0.9rem;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
 if fanduel_file and putting_file and approach_file:
     try:
