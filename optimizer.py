@@ -1,3 +1,4 @@
+import pandas as pd
 import pulp
 
 def optimize_lineup(df, salary_cap=50000, lineup_size=6):
