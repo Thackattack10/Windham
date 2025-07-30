@@ -1,12 +1,11 @@
 def project_golf_points(row):
     """
-    Projection formula combining FPPG, SG Putting, and SG Approach.
-    Adjust weights as you see fit.
+    Calculate projected points based on FPPG, SG_Putting, SG_APP, and SG_OTT.
+    You can adjust the weights based on what you value more.
     """
-    fppg = row.get('FPPG', 0)
-    sg_putting = row.get('SG_Putting', 0)
-    sg_app = row.get('SG_APP', 0)
-
-    # Example weights: 60% FPPG + 20% SG Putting + 20% SG Approach
-    projection = fppg * 0.6 + sg_putting * 0.2 + sg_app * 0.2
-    return projection
+    return (
+        0.5 * row['FPPG'] +
+        2.0 * row['SG_Putting'] +
+        2.5 * row['SG_APP'] +
+        1.8 * row['SG_OTT']
+    )
