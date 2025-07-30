@@ -35,7 +35,6 @@ st.markdown(
         padding-top: 2rem;
     }
 
-    /* Shrink and style file uploader dropzones */
     div[data-testid="fileUploaderDropzone"] {
         max-width: 220px;
         min-height: 50px;
@@ -58,7 +57,7 @@ st.markdown(
 st.markdown('<h1 class="grass-title">⛳️ Mikey\'s Golf Optimizer</h1>', unsafe_allow_html=True)
 
 # --- Upload CSVs Side-by-Side ---
-col1, col2, col3 = st.columns(3)
+col1, col2, col3, col4 = st.columns(4)
 
 with col1:
     fanduel_file = st.file_uploader(
@@ -78,12 +77,19 @@ with col3:
         help="Drag and drop your SG Approach CSV here",
     )
 
+with col4:
+    ott_file = st.file_uploader(
+        "📤 SG Off-the-Tee CSV", type="csv", key="ott_csv",
+        help="Drag and drop your SG:OTT CSV here",
+    )
+
 # --- Process Files ---
-if fanduel_file and putting_file and approach_file:
+if fanduel_file and putting_file and approach_file and ott_file:
     try:
         df_fd = pd.read_csv(fanduel_file)
         df_putting = pd.read_csv(putting_file)
         df_approach = pd.read_csv(approach_file)
+        df_ott = pd.read_csv(ott_file)
     except Exception as e:
         st.error(f"Error reading CSV files: {e}")
         st.stop()
@@ -92,21 +98,24 @@ if fanduel_file and putting_file and approach_file:
     df_fd['PLAYER'] = df_fd['Nickname'].str.strip().str.lower()
     df_putting['PLAYER'] = df_putting['PLAYER'].str.strip().str.lower()
     df_approach['PLAYER'] = df_approach['PLAYER'].str.strip().str.lower()
+    df_ott['PLAYER'] = df_ott['PLAYER'].str.strip().str.lower()
 
-    # Merge SG Putting
     df = pd.merge(df_fd, df_putting[['PLAYER', 'AVG']], on='PLAYER', how='left')
     df.rename(columns={'AVG': 'SG_Putting'}, inplace=True)
 
-    # Merge SG Approach
     df = pd.merge(df, df_approach[['PLAYER', 'AVG']], on='PLAYER', how='left')
     df.rename(columns={'AVG': 'SG_APP'}, inplace=True)
+
+    df = pd.merge(df, df_ott[['PLAYER', 'AVG']], on='PLAYER', how='left')
+    df.rename(columns={'AVG': 'SG_OTT'}, inplace=True)
 
     # Fill missing strokes gained values with 0
     df['SG_Putting'] = df['SG_Putting'].fillna(0)
     df['SG_APP'] = df['SG_APP'].fillna(0)
+    df['SG_OTT'] = df['SG_OTT'].fillna(0)
 
     # Validate required columns
-    required_columns = ['Nickname', 'Salary', 'FPPG', 'SG_Putting', 'SG_APP']
+    required_columns = ['Nickname', 'Salary', 'FPPG', 'SG_Putting', 'SG_APP', 'SG_OTT']
     missing_cols = [col for col in required_columns if col not in df.columns]
     if missing_cols:
         st.error(f"Missing required columns: {missing_cols}")
@@ -117,7 +126,7 @@ if fanduel_file and putting_file and approach_file:
 
     # Show player pool
     st.subheader("📋 Player Pool")
-    st.dataframe(df[['Nickname', 'Salary', 'FPPG', 'SG_Putting', 'SG_APP', 'ProjectedPoints']]
+    st.dataframe(df[['Nickname', 'Salary', 'FPPG', 'SG_Putting', 'SG_APP', 'SG_OTT', 'ProjectedPoints']]
                  .sort_values(by='ProjectedPoints', ascending=False))
 
     # Lock / exclude players
@@ -134,7 +143,7 @@ if fanduel_file and putting_file and approach_file:
         try:
             lineup = optimize_lineup(filtered_df, salary_cap=60000)  # 60k salary cap
             st.success("✅ Optimized lineup found!")
-            st.dataframe(lineup[['Nickname', 'Salary', 'ProjectedPoints', 'SG_Putting', 'SG_APP']].reset_index(drop=True))
+            st.dataframe(lineup[['Nickname', 'Salary', 'ProjectedPoints', 'SG_Putting', 'SG_APP', 'SG_OTT']].reset_index(drop=True))
             st.write(f"💰 Total Salary: {lineup['Salary'].sum()}")
             st.write(f"📈 Projected Points: {lineup['ProjectedPoints'].sum():.2f}")
         except ValueError as ve:
