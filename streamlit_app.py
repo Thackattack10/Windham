@@ -34,6 +34,21 @@ st.markdown(
     .block-container {
         padding-top: 2rem;
     }
+
+    /* Shrink and style file uploader dropzones */
+    div[data-testid="fileUploaderDropzone"] {
+        max-width: 220px;
+        min-height: 50px;
+        font-size: 0.85rem;
+        padding: 6px 8px;
+        border-radius: 8px;
+        background-color: rgba(255, 255, 255, 0.05);
+        border: 1px solid #555;
+    }
+
+    div[data-testid="fileUploaderDropzone"] > label > div {
+        font-size: 0.85rem;
+    }
     </style>
     """,
     unsafe_allow_html=True
@@ -42,40 +57,28 @@ st.markdown(
 # --- Title ---
 st.markdown('<h1 class="grass-title">⛳️ Mikey\'s Golf Optimizer</h1>', unsafe_allow_html=True)
 
-# --- Upload FanDuel and SG Putting CSVs ---
-fanduel_file = st.file_uploader(
-    "📤 Upload FanDuel CSV", type="csv", key="fd_csv",
-    help="Drag and drop your FanDuel CSV here",
-)
-putting_file = st.file_uploader(
-    "📤 Upload Strokes Gained Putting CSV", type="csv", key="putting_csv",
-    help="Drag and drop your SG Putting CSV here",
-)
-approach_file = st.file_uploader(
-    "📤 Upload Strokes Gained Approach CSV", type="csv", key="approach_csv",
-    help="Drag and drop your SG Approach CSV here",
-)
+# --- Upload CSVs Side-by-Side ---
+col1, col2, col3 = st.columns(3)
 
-# Use CSS to shrink the file uploader boxes by targeting Streamlit's classes
-st.markdown(
-    """
-    <style>
-    /* Shrink the file uploader containers */
-    div[data-testid="fileUploaderDropzone"] {
-        max-width: 300px;
-        max-height: 60px;
-        font-size: 0.9rem;
-        padding: 8px 10px;
-    }
-    /* Shrink the dropzone text */
-    div[data-testid="fileUploaderDropzone"] > label > div {
-        font-size: 0.9rem;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
+with col1:
+    fanduel_file = st.file_uploader(
+        "📤 FanDuel CSV", type="csv", key="fd_csv",
+        help="Drag and drop your FanDuel CSV here",
+    )
 
+with col2:
+    putting_file = st.file_uploader(
+        "📤 SG Putting CSV", type="csv", key="putting_csv",
+        help="Drag and drop your SG Putting CSV here",
+    )
+
+with col3:
+    approach_file = st.file_uploader(
+        "📤 SG Approach CSV", type="csv", key="approach_csv",
+        help="Drag and drop your SG Approach CSV here",
+    )
+
+# --- Process Files ---
 if fanduel_file and putting_file and approach_file:
     try:
         df_fd = pd.read_csv(fanduel_file)
@@ -136,4 +139,3 @@ if fanduel_file and putting_file and approach_file:
             st.write(f"📈 Projected Points: {lineup['ProjectedPoints'].sum():.2f}")
         except ValueError as ve:
             st.error(str(ve))
-
