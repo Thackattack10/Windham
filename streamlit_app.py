@@ -77,7 +77,7 @@ if fanduel_file and putting_file and approach_file and ott_file:
         df_fd = pd.read_csv(fanduel_file)
         df_putting = pd.read_csv(putting_file)
         df_approach = pd.read_csv(approach_file)
-        df_ott = pd.read_csv(ott_file)
+        df_OTT = pd.read_csv(OTT_file)
     except Exception as e:
         st.error(f"Error reading CSV files: {e}")
         st.stop()
@@ -86,7 +86,7 @@ if fanduel_file and putting_file and approach_file and ott_file:
 df_fd['PLAYER'] = df_fd['Nickname'].str.strip().str.lower()
 df_putting['PLAYER'] = df_putting['PLAYER'].str.strip().str.lower()
 df_approach['PLAYER'] = df_approach['PLAYER'].str.strip().str.lower()
-df_ott['PLAYER'] = df_ott['PLAYER'].str.strip().str.lower()
+df_OTT['PLAYER'] = df_OTT['PLAYER'].str.strip().str.lower()
 
 df = pd.merge(df_fd, df_putting[['PLAYER', 'AVG']], on='PLAYER', how='left')
 df.rename(columns={'AVG': 'SG_Putting'}, inplace=True)
