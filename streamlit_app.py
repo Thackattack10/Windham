@@ -1,3 +1,4 @@
+st.title("🚨 You are running the correct version")
 import streamlit as st
 import pandas as pd
 from projections import project_golf_points
