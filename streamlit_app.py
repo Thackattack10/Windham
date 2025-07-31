@@ -1,4 +1,3 @@
-st.title("🚨 You are running the correct version")
 import streamlit as st
 import pandas as pd
 from projections import project_golf_points
@@ -113,7 +112,7 @@ if fanduel_file and putting_file and approach_file and ott_file:
     if missing_cols:
         st.error(f"Missing required columns: {missing_cols}")
         st.stop()
-
+st.write("Columns before projection:", df.columns.tolist())
     # Projection
     df['ProjectedPoints'] = df.apply(project_golf_points, axis=1)
 
