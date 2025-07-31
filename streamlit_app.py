@@ -67,8 +67,12 @@ approach_file = st.file_uploader(
     "📤 Upload Strokes Gained Approach CSV", type="csv", key="approach_csv",
     help="Drag and drop your SG Approach CSV here",
 )
+ott_file = st.file_uploader(
+    "📤 Upload Strokes Gained Off-the-Tee CSV", type="csv", key="ott_csv",
+    help="Drag and drop your SG OTT CSV here",
+)
 
-if fanduel_file and putting_file and approach_file:
+if fanduel_file and putting_file and approach_file and ott_file:
     try:
         df_fd = pd.read_csv(fanduel_file)
         df_putting = pd.read_csv(putting_file)
@@ -92,7 +96,7 @@ if fanduel_file and putting_file and approach_file:
     df['SG_APP'] = df['SG_APP'].fillna(0)
 
     # Validate columns
-    required_columns = ['Nickname', 'Salary', 'FPPG', 'SG_Putting', 'SG_APP']
+    required_columns = ['Nickname', 'Salary', 'FPPG', 'SG_Putting', 'SG_APP', 'SG_OTT']
     missing_cols = [col for col in required_columns if col not in df.columns]
     if missing_cols:
         st.error(f"Missing required columns: {missing_cols}")
