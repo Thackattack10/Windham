@@ -86,14 +86,24 @@ if fanduel_file and putting_file and approach_file and ott_file:
     df_putting['PLAYER'] = df_putting['PLAYER'].str.strip().str.lower()
     df_approach['PLAYER'] = df_approach['PLAYER'].str.strip().str.lower()
 
+        # Merge SG Putting
     df = pd.merge(df_fd, df_putting[['PLAYER', 'AVG']], on='PLAYER', how='left')
     df.rename(columns={'AVG': 'SG_Putting'}, inplace=True)
 
+    # Merge SG Approach
     df = pd.merge(df, df_approach[['PLAYER', 'AVG']], on='PLAYER', how='left')
     df.rename(columns={'AVG': 'SG_APP'}, inplace=True)
 
+    # Merge SG Off-the-Tee (OTT)
+    df_ott = pd.read_csv(ott_file)
+    df_ott['PLAYER'] = df_ott['PLAYER'].str.strip().str.lower()
+    df = pd.merge(df, df_ott[['PLAYER', 'AVG']], on='PLAYER', how='left')
+    df.rename(columns={'AVG': 'SG_OTT'}, inplace=True)
+
+    # Fill missing values
     df['SG_Putting'] = df['SG_Putting'].fillna(0)
     df['SG_APP'] = df['SG_APP'].fillna(0)
+    df['SG_OTT'] = df['SG_OTT'].fillna(0)
 
     # Validate columns
     required_columns = ['Nickname', 'Salary', 'FPPG', 'SG_Putting', 'SG_APP', 'SG_OTT']
