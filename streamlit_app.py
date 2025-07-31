@@ -77,6 +77,7 @@ if fanduel_file and putting_file and approach_file and ott_file:
         df_fd = pd.read_csv(fanduel_file)
         df_putting = pd.read_csv(putting_file)
         df_approach = pd.read_csv(approach_file)
+        df_ott = pd.read_csv(ott_file)
     except Exception as e:
         st.error(f"Error reading CSV files: {e}")
         st.stop()
