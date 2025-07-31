@@ -77,7 +77,7 @@ if fanduel_file and putting_file and approach_file and ott_file:
         df_fd = pd.read_csv(fanduel_file)
         df_putting = pd.read_csv(putting_file)
         df_approach = pd.read_csv(approach_file)
-        df_OTT = pd.read_csv(OTT_file)
+        df_ott = pd.read_csv(ott_file)
     except Exception as e:
         st.error(f"Error reading CSV files: {e}")
         st.stop()
@@ -86,7 +86,9 @@ if fanduel_file and putting_file and approach_file and ott_file:
 df_fd['PLAYER'] = df_fd['Nickname'].str.strip().str.lower()
 df_putting['PLAYER'] = df_putting['PLAYER'].str.strip().str.lower()
 df_approach['PLAYER'] = df_approach['PLAYER'].str.strip().str.lower()
-df_OTT['PLAYER'] = df_OTT['PLAYER'].str.strip().str.lower()
+df_ott['PLAYER'] = df_ott['PLAYER'].str.strip().str.lower()
+#Rename the column for clarity
+df_ott.rename(columns={'TOTAL SG:OTT': 'SG_OTT'}, inplace=True)
 
 df = pd.merge(df_fd, df_putting[['PLAYER', 'AVG']], on='PLAYER', how='left')
 df.rename(columns={'AVG': 'SG_Putting'}, inplace=True)
@@ -94,8 +96,8 @@ df.rename(columns={'AVG': 'SG_Putting'}, inplace=True)
 df = pd.merge(df, df_approach[['PLAYER', 'AVG']], on='PLAYER', how='left')
 df.rename(columns={'AVG': 'SG_APP'}, inplace=True)
 
-df = pd.merge(df, df_ott[['PLAYER', 'AVG']], on='PLAYER', how='left')
-df.rename(columns={'AVG': 'SG_OTT'}, inplace=True)
+df = pd.merge(df, df_ott[['PLAYER', 'SG_OTT']], on='PLAYER', how='left')
+df['SG_OTT'] = df['SG_OTT'].fillna(0)
 
 df['SG_Putting'] = df['SG_Putting'].fillna(0)
 df['SG_APP'] = df['SG_APP'].fillna(0)
