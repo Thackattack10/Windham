@@ -106,7 +106,7 @@ if fanduel_file and putting_file and approach_file and ott_file:
     # --- Display player pool ---
     st.subheader("📋 Player Pool")
     st.dataframe(
-        df[['Nickname', 'Salary', 'FPPG', 'SG_Putting', 'SG_APP', 'ProjectedPoints']]
+        df[['Nickname', 'Salary', 'FPPG', 'SG_Putting', 'SG_APP', 'SG_OTT', 'ProjectedPoints']]
         .sort_values(by='ProjectedPoints', ascending=False)
     )
 
