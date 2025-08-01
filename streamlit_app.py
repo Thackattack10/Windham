@@ -103,10 +103,10 @@ df['SG_Putting'] = df['SG_Putting'].fillna(0)
 df['SG_APP'] = df['SG_APP'].fillna(0)
 df['SG_OTT'] = df['SG_OTT'].fillna(0)
 
-    # Fill missing values
-    df['SG_Putting'] = df['SG_Putting'].fillna(0)
-    df['SG_APP'] = df['SG_APP'].fillna(0)
-    df['SG_OTT'] = df['SG_OTT'].fillna(0)
+# Fill missing values
+df['SG_Putting'] = df['SG_Putting'].fillna(0)
+df['SG_APP'] = df['SG_APP'].fillna(0)
+df['SG_OTT'] = df['SG_OTT'].fillna(0)
 
     # Validate columns
     required_columns = ['Nickname', 'Salary', 'FPPG', 'SG_Putting', 'SG_APP', 'SG_OTT']
